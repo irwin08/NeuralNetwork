@@ -1,5 +1,8 @@
 #include "NeuralNetwork.h"
 #include <cmath>
+#include <string>
+#include <fstream>
+#include <random>
 
 NeuralNetwork::NeuralNetwork(std::vector<int> layerSizes)
 {
@@ -23,6 +26,75 @@ NeuralNetwork::NeuralNetwork(std::vector<int> layerSizes)
 void NeuralNetwork::initializeNeuralNet()
 {
 	// !!!
+	
+	for(int i = 1; i < _layerSizes.size(); i++)
+	{
+	
+		std::ifstream myWFile("NNData/weights" + std::to_string(i) + ".txt");
+		std::ifstream myBFile("NNData/biases" + std::to_string(i) + ".txt");
+		
+		if(myWFile.good() && myBFile.good())
+		{
+			//files exist, we need to load them in.
+			
+			
+			
+			//weights
+			std::string line;
+			int index = 0;
+			
+			while(getline(myWFile, line))
+			{
+				VectorXf lineVector;
+				std::string delimiter = ",";
+				size_t pos = 0;
+				while((pos = line.find(delimiter)) != std::string::npos)
+				{
+					lineVector.conservativeResize(lineVector.size()+1);
+					lineVector(lineVector.size()-1) = std::stof(line.substr(0,pos));
+				}
+				lineVector.conservativeResize(lineVector.size()+1);
+				lineVector(lineVector.size()-1) = std::stof(line);
+				
+				_weights[i].conservativeResize(_weights[i].rows(), _weights[i].cols()+1);
+				_weights[i].col(index) = lineVector;
+				
+				index++;
+			}
+			
+			
+			//biases
+			std::string lineB;
+			
+			getline(myBFile, lineB);
+			
+			VectorXf bVector;
+			
+			std::string delimiter2 = ",";
+			size_t pos = 0;
+			
+			while((pos = lineB.find(delimiter2)) != std::string::npos)
+			{
+				bVector.conservativeResize(bVector.size()+1);
+				bVector(bVector.size()-1) = std::stof(lineB.substr(0,pos));
+			bVector.conservativeResize(bVector.size()+1);
+			}
+			bVector(bVector.size()-1) = std::stof(lineB);
+			
+			_biases[i] = bVector;			
+		}
+		else
+		{
+			//files don't exist, generate random numbers
+			
+			_weights[i] = MatrixXf::Random(_layerSizes[i], _layerSizes[i-1]);
+			_biases[i] = VectorXf::Random(_layerSizes[i]);
+			
+		}
+		myWFile.close();
+		myBFile.close();
+	
+	}
 }
 
 
@@ -105,10 +177,10 @@ void NeuralNetwork::stochasticGradientDescent(std::vector<VectorXf> trainingSet,
 		std::vector<VectorXf> z_x;
 		z_x.resize(_layerSizes.size());
 		// vector dCdz for x in training set
-		std::vector<VectorXf> dCdz_x
+		std::vector<VectorXf> dCdz_x;
 		dCdz_x.resize(_layerSizes.size());
 		//vector a for x in the training set.
-		std::vector<VectorXf> a_x
+		std::vector<VectorXf> a_x;
 		a_x.resize(_layerSizes.size());
 		
 		// set input layer activation vector
@@ -123,16 +195,16 @@ void NeuralNetwork::stochasticGradientDescent(std::vector<VectorXf> trainingSet,
 		{
 			z_x[j] = _weights[j]*a_x[j-1] + _biases[j];
 
-			a_x[j] = sigmoid(z_x);
+			a_x[j] = sigmoid(z_x[j]);
 		}
 		
 		// set dCdz for the last layer
-		dCdz_x[_layerSizes.size()-1] = (a_x[_layerSizes.size()-1] - trainingAnswer).cwiseProduct(sigmoidPrime(z_x[_layerSizes.size()-1]));
+		dCdz_x[_layerSizes.size()-1] = (a_x[_layerSizes.size()-1] - trainingAnswer[i]).cwiseProduct(sigmoidPrime(z_x[_layerSizes.size()-1]));
 		
 		// set dCdz for the rest of the layers.
 		for(int j = _layerSizes.size()-2; j > 0; j++)
 		{
-			dCdz_x[j] = (_weights[j+1].transpose()*dCdz[j+1]).cwiseProduct(sigmoidPrime(z_x[j]));
+			dCdz_x[j] = (_weights[j+1].transpose()*dCdz_x[j+1]).cwiseProduct(sigmoidPrime(z_x[j]));
 		}
 		
 		dCdz.push_back(dCdz_x);
@@ -161,7 +233,7 @@ void NeuralNetwork::stochasticGradientDescent(std::vector<VectorXf> trainingSet,
 		_biases[i] = _biases[i] - (learningRate/trainingSet.size())*floatAdjustmentBSum;
 	}
 	
-	// all done!!!
+	// all done!
 }
 
 
@@ -186,7 +258,7 @@ VectorXf NeuralNetwork::sigmoidPrime(VectorXf z)
 	
 	for(int i = 0; i < z.size(); i++)
 	{
-		newZ(i) = (std::exp(-z(i)))/((1 + std::exp(-z(i)))^2);
+		newZ(i) = (std::exp(-z(i)))/(std::pow(2.0, (1 + std::exp(-z(i)))));
 	}
 	
 	return newZ;
