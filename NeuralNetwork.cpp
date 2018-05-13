@@ -77,8 +77,8 @@ void NeuralNetwork::initializeNeuralNet()
 			{
 				bVector.conservativeResize(bVector.size()+1);
 				bVector(bVector.size()-1) = std::stof(lineB.substr(0,pos));
-			bVector.conservativeResize(bVector.size()+1);
 			}
+			bVector.conservativeResize(bVector.size()+1);
 			bVector(bVector.size()-1) = std::stof(lineB);
 			
 			_biases[i] = bVector;			
@@ -168,6 +168,7 @@ void NeuralNetwork::stochasticGradientDescent(std::vector<VectorXf> trainingSet,
 	// vector of partial derivative of the cost function wrt z for each layer for each element x of the training set
 	std::vector<std::vector<VectorXf>> dCdz;
 	
+	
 	// loop through all x in training set
 	for(int i = 0; i < trainingSet.size(); i++)
 	{
@@ -189,6 +190,7 @@ void NeuralNetwork::stochasticGradientDescent(std::vector<VectorXf> trainingSet,
 		// z_x and DCdz_x not defined for initial layer, so set to zero.
 		z_x[0] = VectorXf::Zero(1);
 		dCdz_x[0] = VectorXf::Zero(1);
+
 		
 		// loop through layers and set z_x and a_x.
 		for(int j = 1; j < _layerSizes.size(); j++)
@@ -202,10 +204,12 @@ void NeuralNetwork::stochasticGradientDescent(std::vector<VectorXf> trainingSet,
 		dCdz_x[_layerSizes.size()-1] = (a_x[_layerSizes.size()-1] - trainingAnswer[i]).cwiseProduct(sigmoidPrime(z_x[_layerSizes.size()-1]));
 		
 		// set dCdz for the rest of the layers.
-		for(int j = _layerSizes.size()-2; j > 0; j++)
+		for(int j = _layerSizes.size()-2; j > 0; j--)
 		{
 			dCdz_x[j] = (_weights[j+1].transpose()*dCdz_x[j+1]).cwiseProduct(sigmoidPrime(z_x[j]));
 		}
+		
+		
 		
 		dCdz.push_back(dCdz_x);
 		a.push_back(a_x);
@@ -215,12 +219,16 @@ void NeuralNetwork::stochasticGradientDescent(std::vector<VectorXf> trainingSet,
 	// gradient values from the training set.
 	
 	for(int i = 1; i < _layerSizes.size(); i++)
-	{
-		VectorXf floatAdjustmentWSum = dCdz[0][i]*(a[0][i-1].transpose());
+	{	
+		MatrixXf floatAdjustmentWSum = dCdz[0][i]*(a[0][i-1].transpose());
+		
+		std::cout << "step 2" << std::endl;
 		for(int j = 1; i < trainingSet.size(); i++)
 		{
 			floatAdjustmentWSum = floatAdjustmentWSum + (dCdz[j][i]*(a[j][i-1].transpose()));
 		}
+		
+		
 		
 		_weights[i] = _weights[i] - (learningRate/trainingSet.size())*floatAdjustmentWSum;
 		
@@ -233,7 +241,45 @@ void NeuralNetwork::stochasticGradientDescent(std::vector<VectorXf> trainingSet,
 		_biases[i] = _biases[i] - (learningRate/trainingSet.size())*floatAdjustmentBSum;
 	}
 	
+	
+	
 	// all done!
+}
+
+
+void NeuralNetwork::saveNeuralNetwork()
+{
+	for(int i = 1; i < _layerSizes.size(); i++)
+	{
+		std::ofstream myWFile("NNData/weights" + std::to_string(i) + ".txt");
+		std::ofstream myBFile("NNData/biases" + std::to_string(i) + ".txt");
+		
+		//by column, so use old layer
+		for(int j = 0; j < _layerSizes[i-1]; j++)
+		{
+			std::string wLine = "";
+			for(int k = 0; k < _layerSizes[i] - 1; k++)
+			{	
+				wLine = wLine + std::to_string(_weights[i].col(j)(k)) + ",";
+			}
+			wLine = wLine + std::to_string(_weights[i].col(j)(_layerSizes[i] - 1)) + "\n";
+			
+			myWFile << wLine;
+		}
+		
+		std::string bLine = "";
+		
+		for(int j = 0; j < _layerSizes[i] - 1; j++)
+		{
+			bLine = bLine + std::to_string(_biases[i](j)) + ",";
+		}
+		bLine = bLine + std::to_string(_biases[i](_layerSizes[i] - 1));
+		
+		myBFile << bLine;
+		
+		myWFile.close();
+		myBFile.close();
+	}		
 }
 
 
@@ -263,4 +309,12 @@ VectorXf NeuralNetwork::sigmoidPrime(VectorXf z)
 	
 	return newZ;
 }
+
+
+
+
+
+
+
+
 

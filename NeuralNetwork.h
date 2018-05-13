@@ -21,6 +21,7 @@ class NeuralNetwork
 		// trains neural net using SGD algorithm - takes in a set of input layers to train and a set of desired outputs for said layers.
 		void stochasticGradientDescent(std::vector<VectorXf> trainingSet, std::vector<VectorXf> trainingAnswer, float learningRate);
 		
+		void saveNeuralNetwork();
 		
 		
 	private:
@@ -33,4 +34,5 @@ class NeuralNetwork
 		VectorXf sigmoid(VectorXf z);
 		VectorXf sigmoidPrime(VectorXf z);
 	
+		
 };
