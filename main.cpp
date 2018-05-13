@@ -22,8 +22,8 @@ int main()
 	
 	VectorXf b(6);
 	b(0) = 0.0;
-	b(1) = 0.0;
-	b(2) = 1.0;
+	b(1) = 1.0;
+	b(2) = 0.0;
 	b(3) = 0.0;
 	b(4) = 0.0;
 	b(5) = 0.0;
@@ -36,15 +36,13 @@ int main()
 	
 	cout << "Starting Neural Network..." << endl;
 	
-	cout << nn->getOutput(a)<< endl;
-	
 	cout << "Beginning training..." << endl;
 	
 	nn->stochasticGradientDescent(trainingSet, trainingAnswers, 0.1);
 	
 	cout << "Training complete." << endl;
 	
-	cout << nn->getOutput(a)<< endl;
+	cout << "Output: " << nn->getOutput(a)<< endl;
 	
 	nn->saveNeuralNetwork();
 	

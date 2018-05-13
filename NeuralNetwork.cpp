@@ -19,7 +19,6 @@ NeuralNetwork::NeuralNetwork(std::vector<int> layerSizes)
 	
 	// this function name is awesome.
 	initializeNeuralNet();
-	
 }
 
 
@@ -33,11 +32,11 @@ void NeuralNetwork::initializeNeuralNet()
 		std::ifstream myWFile("NNData/weights" + std::to_string(i) + ".txt");
 		std::ifstream myBFile("NNData/biases" + std::to_string(i) + ".txt");
 		
+		
+		
 		if(myWFile.good() && myBFile.good())
 		{
 			//files exist, we need to load them in.
-			
-			
 			
 			//weights
 			std::string line;
@@ -46,42 +45,45 @@ void NeuralNetwork::initializeNeuralNet()
 			while(getline(myWFile, line))
 			{
 				VectorXf lineVector;
+				lineVector = VectorXf::Zero(1);
 				std::string delimiter = ",";
 				size_t pos = 0;
+				
 				while((pos = line.find(delimiter)) != std::string::npos)
 				{
-					lineVector.conservativeResize(lineVector.size()+1);
 					lineVector(lineVector.size()-1) = std::stof(line.substr(0,pos));
+					line.erase(0, pos+delimiter.length());
+					lineVector.conservativeResize(lineVector.size()+1);
 				}
-				lineVector.conservativeResize(lineVector.size()+1);
 				lineVector(lineVector.size()-1) = std::stof(line);
 				
-				_weights[i].conservativeResize(_weights[i].rows(), _weights[i].cols()+1);
+				
+
 				_weights[i].col(index) = lineVector;
 				
 				index++;
 			}
-			
-			
 			//biases
 			std::string lineB;
 			
 			getline(myBFile, lineB);
 			
 			VectorXf bVector;
+			bVector = VectorXf::Zero(1);
 			
 			std::string delimiter2 = ",";
 			size_t pos = 0;
 			
 			while((pos = lineB.find(delimiter2)) != std::string::npos)
-			{
-				bVector.conservativeResize(bVector.size()+1);
+			{	
 				bVector(bVector.size()-1) = std::stof(lineB.substr(0,pos));
+				lineB.erase(0, pos+delimiter2.length());
+				bVector.conservativeResize(bVector.size()+1);
 			}
-			bVector.conservativeResize(bVector.size()+1);
+
 			bVector(bVector.size()-1) = std::stof(lineB);
 			
-			_biases[i] = bVector;			
+			_biases[i] = bVector;	
 		}
 		else
 		{
@@ -222,7 +224,6 @@ void NeuralNetwork::stochasticGradientDescent(std::vector<VectorXf> trainingSet,
 	{	
 		MatrixXf floatAdjustmentWSum = dCdz[0][i]*(a[0][i-1].transpose());
 		
-		std::cout << "step 2" << std::endl;
 		for(int j = 1; i < trainingSet.size(); i++)
 		{
 			floatAdjustmentWSum = floatAdjustmentWSum + (dCdz[j][i]*(a[j][i-1].transpose()));
