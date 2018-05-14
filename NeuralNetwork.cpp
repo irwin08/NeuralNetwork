@@ -211,7 +211,6 @@ void NeuralNetwork::stochasticGradientDescent(std::vector<VectorXf> trainingSet,
 		// set dCdz for the rest of the layers.
 		for(int j = _layerSizes.size()-2; j > 0; j--)
 		{
-			std::cout << "(z_x[j]): "<< z_x[j] << std::endl;
 			dCdz_x[j] = (_weights[j+1].transpose()*dCdz_x[j+1]).cwiseProduct(sigmoidPrime(z_x[j]));
 		}
 	        
