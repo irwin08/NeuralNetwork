@@ -91,10 +91,13 @@ void NeuralNetwork::initializeNeuralNet()
 			
 			_weights[i] = MatrixXf::Random(_layerSizes[i], _layerSizes[i-1]);
 			_biases[i] = VectorXf::Random(_layerSizes[i]);
+
 			
 		}
 		myWFile.close();
 		myBFile.close();
+
+		
 	
 	}
 }
@@ -208,17 +211,17 @@ void NeuralNetwork::stochasticGradientDescent(std::vector<VectorXf> trainingSet,
 		// set dCdz for the rest of the layers.
 		for(int j = _layerSizes.size()-2; j > 0; j--)
 		{
+			std::cout << "(z_x[j]): "<< z_x[j] << std::endl;
 			dCdz_x[j] = (_weights[j+1].transpose()*dCdz_x[j+1]).cwiseProduct(sigmoidPrime(z_x[j]));
 		}
-		
-		
-		
+	        
 		dCdz.push_back(dCdz_x);
 		a.push_back(a_x);
 	}
 	
 	// most of the mathematical heavy-lifting is over. All that is left to do is adjust the weights and biases based on the average 
 	// gradient values from the training set.
+	
 	
 	
 	
@@ -301,13 +304,18 @@ VectorXf NeuralNetwork::sigmoid(VectorXf z)
 
 VectorXf NeuralNetwork::sigmoidPrime(VectorXf z)
 {
-	// f'(x) = \frac{e^{-x}}{(1 + e^{-x})^2} 
-	VectorXf newZ = z;
-	
-	for(int i = 0; i < z.size(); i++)
+	// f'(x) = \frac{e^{-x}}{(1 + e^{-x})^2} = f(x)*(1-f(x)
+
+	VectorXf one = z;
+	for(int i = 0; i < one.size(); i++)
 	{
-		newZ(i) = (std::exp(-z(i)))/(std::pow(2.0, (1 + std::exp(-z(i)))));
+		one(i) = 1;
 	}
+
+	
+	VectorXf newZ = (sigmoid(z).cwiseProduct((one - sigmoid(z))));
+	
+	
 	
 	return newZ;
 }
