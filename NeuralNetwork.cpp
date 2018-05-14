@@ -220,29 +220,30 @@ void NeuralNetwork::stochasticGradientDescent(std::vector<VectorXf> trainingSet,
 	// most of the mathematical heavy-lifting is over. All that is left to do is adjust the weights and biases based on the average 
 	// gradient values from the training set.
 	
+	
+	
 	for(int i = 1; i < _layerSizes.size(); i++)
 	{	
 		MatrixXf floatAdjustmentWSum = dCdz[0][i]*(a[0][i-1].transpose());
 		
-		for(int j = 1; i < trainingSet.size(); i++)
+		for(int j = 1; j < trainingSet.size(); j++)
 		{
 			floatAdjustmentWSum = floatAdjustmentWSum + (dCdz[j][i]*(a[j][i-1].transpose()));
 		}
 		
-		
-		
 		_weights[i] = _weights[i] - (learningRate/trainingSet.size())*floatAdjustmentWSum;
 		
+		
 		VectorXf floatAdjustmentBSum = dCdz[0][i];
-		for(int j = 1; i < trainingSet.size(); i++)
+		for(int j = 1; j < trainingSet.size(); j++)
 		{
 			floatAdjustmentBSum = floatAdjustmentBSum + dCdz[j][i];
 		}
 		
 		_biases[i] = _biases[i] - (learningRate/trainingSet.size())*floatAdjustmentBSum;
+		
+	
 	}
-	
-	
 	
 	// all done!
 }
